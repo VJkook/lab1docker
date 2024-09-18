@@ -1,0 +1,147 @@
+Задания:
+1) собрать тестовый вариант приложения;
+
+    docker build -t test-app .
+
+2) выполнить сборку образа без имени и тега, с указанием любого имени и 
+тега latest, с указанием любого другого тега;
+    ( test-app - имя контейнера latest - тег ( можно хоть что написать ))
+    docker build . (без имени и тега )
+    docker build -t test-app:latest . (с указанием любого имени и тега)  
+    docker build -t test-app:1.0 . ( с указанием любого тега)
+
+
+3) удалить собранные образы;
+
+    docker rmi <image_id> ( удаляем по id ) , чтобы этот id получить вызываем docker images
+
+4) запустить контейнер из собранного образа без указания имени, после 
+остановить и удалить;
+
+    docker run <image_id> ( запустить контейнер )
+    docker ps ( находим id запущенного контейнера )
+    docker stop <container_id> ( остонавливаем контейнер по id )
+    docker rm <container_id> ( удаляем контейнер по id)
+
+5) запустить контейнер с указанием имени, после остановить и удалить;
+
+    docker run --name test-app (my-container-name) <image_id> ( запускаем контейнер c именем)
+    docker stop my-container ( останавливаем контейнер с именем)
+    docker rm my-container ( удалем контейнер по имени  )
+
+6) запустить контейнер с указанием порта в системе, отличающегося от 
+порта внутри контейнера.
+
+    docker run -d -p 3000:80 --name test-app <image_id> ( запускаем контейнер по имени , где порт 3000 - это порт нашей машины и 80 
+    - порт контейнера на который будет происходить перенаправление )
+
+
+Дополнительные задания:
+1) загрузить командой docker pull образ busybox;
+
+    docker pull busybox ( загружаем образ с помощью комманды)
+
+2) запустить контейнер в фоновом режиме с командой ping ya.ru и 10 
+пингами, назвать контейнер pinger;
+
+    docker run -d --name pinger busybox ping -c 10 ya.ru ( запускаем контейнер с именем pinger и пингом 10) -d - запуск в фонновом реж
+
+3) вывести в консоль список запущенных и остановленных контейнеров;
+
+    docker ps -a  ( выводим список запущ и остан контейнеров)
+
+4) вывести в консоль логи контейнера pinger;
+
+    docker logs pinger ( выводим локги из контейнера )
+
+5) удалить контейнер pinger;
+
+    docker rm pinger ( удаляем контейнер )
+
+6) удалить образ busybox
+
+    docker rmi busybox ( удаляем образ )
+
+################################ 2 часть 
+
+
+Задания:
+1) написать скрипт для обновления контейнера;
+
+    файл script.ps1
+
+2) выполнить обновление контейнера;
+
+    ./script.sh   - запуск скрипта
+
+3) выполнить обновление контейнера, сохранив старую версию образа;
+
+    закоментить строку #docker rmi test-app:latest
+
+4) запустить два контейнера: один с новой версией, другой со старой.
+
+    docker run -d --name test-container  test-app:latest - запуск контейнера с новой версией
+    
+    docker run -d --name test-container-old  test-app:old-latest - запуск контейнера со старой версией
+
+
+Задания: 
+1) добавить  в  запуск  сервиса  переменную  INSTANCE_ID. Запустить 
+одновременно два контейнера с сервером, в один передать INSTANCE_ID=1, 
+в  другой  INSTANCE_ID=2.  Модифицировать  вывод  лог-файла,  в  имени 
+файла  теперь  должен  присутствовать  INSTANCE_ID сервиса.  Используя 
+volumes, подключить оба сервиса к папке logs  как было описано в задании. 
+На хост-машине создать файл с произвольным именем в папке logs. Сделать 
+несколько  запросов  к  каждому  сервису.  Используя  команду  docker  exec, 
+docker run -dp 3000:1234 -e PORT=1234 -v <path>:/app/logs --name test-
+container test 
+подключиться  к  первому  контейнеру  и  отобразить  содержимое  папки  logs, 
+затем выйти, подключиться ко второму и отобразить содержимое папки logs; 
+
+2) с  помощью  docker  volume  create  создать  volume  для  сервисов. 
+Подключить  каждый  volume к  отдельному  сервису  для  записи  логов. 
+Запустить контейнер busybox в интерактивном режиме и подключить к нему 
+созданный volume. Просмотреть логи, которые записывает сервис; 
+ Реализовать  сервис,  отдающий  через  эндпоинт  последние  несколько 
+строк логов других сервисов, которые пишут логи каждый в свой volume.
+
+
+    1)Дополнил код. 
+    Запустил два контейнера - 
+    docker run -dp 3000:3000 -e PORT=3000 -e INSTANCE_ID=1 -v <path-to-logs>:/app/logs --name test-container-1 test-app
+    docker run -dp 3001:3000 -e PORT=3000 -e INSTANCE_ID=2 -v <path-to-logs>:/app/logs --name test-container-2 test-app
+
+    Просмотрел папки - 
+    docker exec -it test-container-1 ls /app/logs
+    docker exec -it test-container-2 ls /app/logs
+
+
+    2) СОздал volume - 
+    docker volume create logs_volume_1
+    docker volume create logs_volume_2
+
+    И подцепил контейнеры к ним
+    docker run -dp 3000:3000 -e PORT=3000 -e INSTANCE_ID=1 -v logs_volume_1:/app/logs --name test-container-1 test-app
+    docker run -dp 3001:3000 -e PORT=3000 -e INSTANCE_ID=2 -v logs_volume_2:/app/logs --name test-container-2 test-app
+
+
+    И чтобы посмотреть через busybox нужно выполнить команды - 
+    docker run -it --rm -v logs_volume_1:/app/logs busybox sh -c "cat /app/logs/access-log-1.log"
+    docker run -it --rm -v logs_volume_2:/app/logs busybox sh -c "cat /app/logs/access-log-2.log"
+
+
+    docker run -it --rm -v logs_volume_2:/app/logs busybox sh -c "echo 'Test log entry' > /app/logs/access-log-2.log"
+
+
+
+
+
+
+
+
+
+
+
+docker run -dp 3000:3000 -e PORT=3000 -e INSTANCE_ID=1 -v "D:/Yniver/Four_curs_IT_7_semestr/Upravlenie_IT_proektami/Lab1/Lab1:/app/logs" --name test-container-1 test-app
+docker run -dp 3001:3000 -e PORT=3000 -e INSTANCE_ID=2 -v "D:/Yniver/Four_curs_IT_7_semestr/Upravlenie_IT_proektami/Lab1/Lab1:/app/logs" --name test-container-2 test-app
+
